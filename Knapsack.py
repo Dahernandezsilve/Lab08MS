@@ -85,8 +85,8 @@ class Knapsack:
         
         return best, bestValue, bestWeight
 
-values = [10, 20, 30, 40, 50]
-weights = [1, 2, 3, 4, 5]
+values = [10, 20, 30, 40, 50, 60]
+weights = [5, 2, 7, 1, 3, 4]
 maxWeight = 6
 popSize = 100
 mutationRate = 0.01

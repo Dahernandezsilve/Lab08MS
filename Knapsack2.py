@@ -6,9 +6,11 @@ maxWeight = 50
 popSize = 100
 mutationRate = 0.01
 generations = 10
+s = 0.5
+c = 0.8
 
-knapsack = Knapsack(valores, pesos, maxWeight, popSize, mutationRate, generations)
-best, bestValue, bestWeight = knapsack.geneticAlgorithm(valores, pesos, maxWeight, popSize, mutationRate, generations)
+knapsack = Knapsack(valores, pesos, maxWeight, popSize, mutationRate, generations, s, c)
+best, bestValue, bestWeight = knapsack.geneticAlgorithm(valores, pesos, maxWeight, popSize, mutationRate, generations, s, c)
 
 print(f"Mejor solución: {best}")
 print(f"Valor total: {bestValue}")
