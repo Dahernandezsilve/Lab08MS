@@ -1,13 +1,15 @@
 import random
 
 class Knapsack:
-    def __init__(self, values, weights, maxWeight, pop_size, mutationRate, generations):
+    def __init__(self, values, weights, maxWeight, pop_size, mutationRate, generations, s, c):
         self.values = values
         self.weights = weights
         self.maxWeight = maxWeight
         self.pop_size = pop_size
         self.mutationRate = mutationRate
         self.generations = generations
+        self.s = s
+        self.c = c
 
     def genRandomSolution(self, size):
         solution = [random.randint(0, 1) for _ in range(size)]
@@ -20,12 +22,8 @@ class Knapsack:
         return population
 
     def fitness(self, solution, values, weights, maxWeight):
-        weight = 0
-        value = 0
-        for i in range(len(solution)):
-            if solution[i] == 1:
-                weight += weights[i]
-                value += values[i]
+        weight = sum([weights[i] for i in range(len(solution)) if solution[i] == 1])
+        value = sum([values[i] for i in range(len(solution)) if solution[i] == 1])
         if weight > maxWeight:
             print(f"⚖️ Exceso de peso: {weight} > {maxWeight}. Fitness = 0.")
             return 0
@@ -33,15 +31,10 @@ class Knapsack:
         return value
 
     def basicSelection(self, population, values, weights, maxWeight):
-        best = None
-        bestFitness = 0
-        for solution in population:
-            fit = self.fitness(solution, values, weights, maxWeight)
-            if fit > bestFitness:
-                best = solution
-                bestFitness = fit
-        print(f"🏅 Mejor solución seleccionada: {best} con fitness {bestFitness}")
-        return best
+        sorted_population = sorted(population, key=lambda sol: self.fitness(sol, values, weights, maxWeight), reverse=True)
+        num_selected = int(self.s * len(population))
+        print(f"🔝 Seleccionando el {self.s * 100}% de la mejor población: {num_selected} individuos.")
+        return sorted_population[:num_selected]
 
     def crossover(self, parent1, parent2):
         point = random.randint(1, len(parent1) - 2)
@@ -57,28 +50,32 @@ class Knapsack:
                 print(f"⚡️ Mutación en el índice {i}: {solution}")
         return solution
 
-    def geneticAlgorithm(self, values, weights, maxWeight, popSize, mutationRate, generations):
+    def geneticAlgorithm(self, values, weights, maxWeight, popSize, mutationRate, generations, s, c):
         population = self.genInitialPopulation(popSize, len(values))
-        
 
         for gen in range(generations):
             print(f"\n🌱 Generación {gen+1} iniciada...")
+            
+            selected_population = self.basicSelection(population, values, weights, maxWeight)
+
             newPopulation = []
 
-            for _ in range(popSize):
-                parent1 = self.basicSelection(population, values, weights, maxWeight) # Selección
-                parent2 = self.basicSelection(population, values, weights, maxWeight) # Selección
+            num_crossovers = int(c * popSize)
 
-                child = self.crossover(parent1, parent2) # Cruce
-
-                child = self.mutate(child, mutationRate) # Mutacion
-
+            for _ in range(num_crossovers):
+                parent1 = random.choice(selected_population)
+                parent2 = random.choice(selected_population)
+                child = self.crossover(parent1, parent2)
+                child = self.mutate(child, mutationRate)
                 newPopulation.append(child)
 
-            population = newPopulation
-            print(f"📈 Población evolucionada a la generación {gen+1}.")
+            while len(newPopulation) < popSize:
+                newPopulation.append(random.choice(selected_population))
 
-        best = self.basicSelection(population, values, weights, maxWeight)
+            population = newPopulation
+            print(f"📈 Población evolucionada a la generación {gen+1}. Tamaño: {len(population)}")
+
+        best = max(population, key=lambda sol: self.fitness(sol, values, weights, maxWeight))
         bestValue = self.fitness(best, values, weights, maxWeight)
         bestWeight = sum([weights[i] for i in range(len(best)) if best[i] == 1])
 
@@ -88,13 +85,14 @@ class Knapsack:
         
         return best, bestValue, bestWeight
 
-# Ejemplo de uso
 values = [10, 20, 30, 40, 50]
 weights = [1, 2, 3, 4, 5]
 maxWeight = 6
 popSize = 100
 mutationRate = 0.01
 generations = 10
+s = 0.5
+c = 0.8
 
-knapsack = Knapsack(values, weights, maxWeight, popSize, mutationRate, generations)
-knapsack.geneticAlgorithm(values, weights, maxWeight, popSize, mutationRate, generations)
+knapsack = Knapsack(values, weights, maxWeight, popSize, mutationRate, generations, s, c)
+knapsack.geneticAlgorithm(values, weights, maxWeight, popSize, mutationRate, generations, s, c)
