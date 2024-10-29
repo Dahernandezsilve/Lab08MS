@@ -123,7 +123,7 @@ class GeneticAlgorithmTSP:
 
 # Parámetros del algoritmo
 popSize = 100
-mutationRate = 0.01
+mutationRate = 0.001
 max_duration = 61200  # En segundos
 ga = GeneticAlgorithmTSP(distanceMatrix, cities, popSize, mutationRate, max_duration)
 
@@ -165,6 +165,19 @@ ax.set_title('Optimización del TSP usando Algoritmo Genético', fontsize=14)
 ax.set_xlabel('Coordenada X')
 ax.set_ylabel('Coordenada Y')
 ax.grid(True)
+
+def export_best_route(best_route, filename='best_route.txt'):
+    with open(filename, 'w') as f:
+        f.write('Tour óptimo:\n')
+        for city in best_route:
+            f.write(f"{city}\n")
+        # También puedes incluir la distancia total si lo deseas
+        distance = ga.fitness(best_route)
+        f.write(f"\nDistancia total: {distance:.2f}\n")
+
+# Al final del script, después de la animación, exportar el mejor recorrido
+best_route = ga.bestRoute()
+export_best_route(best_route)
 
 ani = animation.FuncAnimation(fig, update, fargs=(ga, scat, line), interval=50, repeat=False)
 plt.show()
