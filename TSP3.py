@@ -141,7 +141,13 @@ def export_best_route(route, ga):
     with open('best_route.txt', 'w') as f:
         distance = ga.fitness(route)  # Calcula la distancia del recorrido
         f.write(f"Mejor distancia: {distance:.2f}\n")
-        f.write("Recorrido óptimo: " + ' -> '.join(map(str, route)) + '\n')
+        f.write("Recorrido óptimo:\n")
+        f.write("Ciudad\tX\tY\n")  # Encabezados para las columnas
+        for city in route:
+            cityNumber = cities[city][0]
+            x = cities[city][1]
+            y = cities[city][2]
+            f.write(f"{cityNumber}\t{x:.2f}\t{y:.2f}\n")  # Escribimos ciudad, x, y
 
 def update(frame, ga, scat, line):
     global generation_count, best_distance, best_route
@@ -164,9 +170,24 @@ def update(frame, ga, scat, line):
         best_distance = current_distance
         best_route = current_best_route  # Guardamos el recorrido óptimo
         # Exporta la mejor distancia y el recorrido
+        '''
+         with open('best_route.txt', 'w') as f:
+        distance = ga.fitness(route)  # Calcula la distancia del recorrido
+        f.write(f"Mejor distancia: {distance:.2f}\n")
+        f.write("Recorrido óptimo:\n")
+        for city in route:
+            city_number = cities[city][0]
+            x = cities[city][1]
+            y = cities[city][2]
+            f.write(f"Ciudad {city_number}: (x: {x}, y: {y})\n")'''
         with open('best_distance.txt', 'w') as f:
-            f.write(f"Mejor distancia en este momento: {best_distance:.2f}\n")
-            f.write("Recorrido Optimo: " + ' -> '.join(map(str, best_route)) + '\n')
+            f.write(f"Mejor distancia: {best_distance:.2f}\n")
+            f.write("Recorrido Optimo:\n")
+            for city in best_route:
+                city_number = cities[city][0]
+                x = cities[city][1]
+                y = cities[city][2]
+                f.write(f"Ciudad {int(city_number)}: (x: {x}, y: {y})\n")
 
     x = [cities[city][1] for city in current_best_route] + [cities[current_best_route[0]][1]]
     y = [cities[city][2] for city in current_best_route] + [cities[current_best_route[0]][2]]
