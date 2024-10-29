@@ -123,7 +123,7 @@ class GeneticAlgorithmTSP:
 
 # Parámetros del algoritmo
 popSize = 100
-mutationRate = 0.001
+mutationRate = 0.01
 max_duration = 61200  # En segundos
 ga = GeneticAlgorithmTSP(distanceMatrix, cities, popSize, mutationRate, max_duration)
 
@@ -131,25 +131,52 @@ ga = GeneticAlgorithmTSP(distanceMatrix, cities, popSize, mutationRate, max_dura
 start_time = time.time()
 generation_count = 0  # Contador de generaciones
 
+# Variable para mantener la mejor distancia encontrada
+best_distance = float('inf')
+
+best_distance = float('inf')
+best_route = None  # Para almacenar el recorrido óptimo
+
+def export_best_route(route, ga):
+    with open('best_route.txt', 'w') as f:
+        distance = ga.fitness(route)  # Calcula la distancia del recorrido
+        f.write(f"Mejor distancia: {distance:.2f}\n")
+        f.write("Recorrido óptimo: " + ' -> '.join(map(str, route)) + '\n')
+
 def update(frame, ga, scat, line):
-    global generation_count
+    global generation_count, best_distance, best_route
     elapsed_time = time.time() - start_time
-    generation_count += 1  # Incrementamos en cada llamada
+    generation_count += 1
 
     if elapsed_time > ga.max_duration:
         ani.event_source.stop()
+        # Exporta el mejor recorrido al final
+        if best_route is not None:
+            export_best_route(best_route, ga)
         return
 
     ga.evolve()
-    bestRoute = ga.bestRoute()
-    x = [cities[city][1] for city in bestRoute] + [cities[bestRoute[0]][1]]
-    y = [cities[city][2] for city in bestRoute] + [cities[bestRoute[0]][2]]
+    current_best_route = ga.bestRoute()
+    current_distance = ga.fitness(current_best_route)
+
+    # Verificamos si la distancia actual es mejor que la mejor encontrada
+    if current_distance < best_distance:
+        best_distance = current_distance
+        best_route = current_best_route  # Guardamos el recorrido óptimo
+        # Exporta la mejor distancia y el recorrido
+        with open('best_distance.txt', 'w') as f:
+            f.write(f"Mejor distancia en este momento: {best_distance:.2f}\n")
+            f.write("Recorrido Optimo: " + ' -> '.join(map(str, best_route)) + '\n')
+
+    x = [cities[city][1] for city in current_best_route] + [cities[current_best_route[0]][1]]
+    y = [cities[city][2] for city in current_best_route] + [cities[current_best_route[0]][2]]
     scat.set_offsets(np.c_[x, y])
     line.set_data(x, y)
     
     # Actualizamos el título con la generación y el tiempo transcurrido
-    ax.set_title(f"Generación: {generation_count} - Tiempo: {elapsed_time:.2f}s - Mejor Distancia: {ga.fitness(bestRoute):.2f}")
+    ax.set_title(f"Generación: {generation_count} - Tiempo: {elapsed_time:.2f}s - Mejor Distancia: {current_distance:.2f}")
     return scat, line
+
 
 # Configuración para la visualización
 fig, ax = plt.subplots(figsize=(10, 6))
@@ -166,18 +193,6 @@ ax.set_xlabel('Coordenada X')
 ax.set_ylabel('Coordenada Y')
 ax.grid(True)
 
-def export_best_route(best_route, filename='best_route.txt'):
-    with open(filename, 'w') as f:
-        f.write('Tour óptimo:\n')
-        for city in best_route:
-            f.write(f"{city}\n")
-        # También puedes incluir la distancia total si lo deseas
-        distance = ga.fitness(best_route)
-        f.write(f"\nDistancia total: {distance:.2f}\n")
-
-# Al final del script, después de la animación, exportar el mejor recorrido
-best_route = ga.bestRoute()
-export_best_route(best_route)
 
 ani = animation.FuncAnimation(fig, update, fargs=(ga, scat, line), interval=50, repeat=False)
 plt.show()
