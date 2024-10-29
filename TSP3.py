@@ -53,12 +53,14 @@ def calculateDistanceMatrix(cities):
 distanceMatrix = calculateDistanceMatrix(cities)
 
 class GeneticAlgorithmTSP:
-    def __init__(self, distanceMatrix, cities, popSize, mutationRate, max_duration):
+    def __init__(self, distanceMatrix, cities, popSize, mutationRate, max_duration, elitism_rate=0.1, tournament_size=5):
         self.distanceMatrix = distanceMatrix
         self.cities = cities
         self.popSize = popSize
         self.mutationRate = mutationRate
         self.max_duration = max_duration
+        self.elitism_count = int(elitism_rate * popSize)  # Número de individuos de élite a preservar
+        self.tournament_size = tournament_size
         self.numCities = len(cities)
         self.population = self.createPopulation()
 
@@ -72,11 +74,13 @@ class GeneticAlgorithmTSP:
         return distance
 
     def selection(self):
-        fitnessScores = np.array([self.fitness(route) for route in self.population])
-        probabilities = fitnessScores.max() - fitnessScores + 1e-6
-        probabilities /= probabilities.sum()
-        selectedIndices = np.random.choice(np.arange(self.popSize), size=self.popSize // 2, replace=False, p=probabilities)
-        return [self.population[i] for i in selectedIndices]
+        # Selección de individuos usando torneo
+        selected = []
+        for _ in range(self.popSize - self.elitism_count):
+            tournament = random.sample(self.population, self.tournament_size)
+            winner = min(tournament, key=lambda route: self.fitness(route))
+            selected.append(winner)
+        return selected
 
     def crossover(self, parent1, parent2):
         size = len(parent1)
@@ -101,15 +105,17 @@ class GeneticAlgorithmTSP:
         return route
 
     def evolve(self):
-        bestRoute = self.bestRoute()
+        best_individuals = sorted(self.population, key=lambda route: self.fitness(route))[:self.elitism_count]
         selected = self.selection()
-        newPopulation = selected[:]
-        while len(newPopulation) < self.popSize - 1:
+        newPopulation = best_individuals[:]  # Iniciamos con los mejores individuos
+
+        # Cruzamiento y mutación para completar la población
+        while len(newPopulation) < self.popSize:
             parent1, parent2 = random.sample(selected, 2)
             child = self.crossover(parent1, parent2)
             child = self.mutate(child)
             newPopulation.append(child)
-        newPopulation.append(bestRoute)
+
         self.population = newPopulation
 
     def bestRoute(self):
